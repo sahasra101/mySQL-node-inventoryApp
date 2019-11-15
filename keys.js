@@ -1,1 +1,1 @@
-exports.mysqlpswd =  "password: "+process.env.mySQLpswd;
+exports.mysqlpswd = process.env.mySQLpswd;
