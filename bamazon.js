@@ -86,12 +86,12 @@ function readProducts() {
         // console.log(res);
 
         // connection.end();
-        
+
         var table = new Table({
-            head: ['ID', 'Product Name', 'Department Name', 'Price $', 'Inventory'], 
+            head: ['ID', 'Product Name', 'Department Name', 'Price $', 'Inventory'],
             colWidths: [5, 30, 20, 10, 11]
         });
-        
+
         // table is an Array, so you can `push`, `unshift`, `splice` and friends
         for (var j = 0; j < res.length; j++) {
             table.push([res[j].id, res[j].product_name, res[j].department_name, res[j].price, res[j].stock_quantity]);
@@ -156,18 +156,33 @@ function buyItem() {
                         ], function (err, res) {
                             if (err) throw err;
                         });
-
-// prompt user to see if they want to make a new purchase or leave the store
-
-
+                    askAnotherPurchase();
+                    // coding for not enough in stock
                 } else if (quantItemAvail < quantDesired) {
                     console.log("We are sorry. We do not have enough of your desired product in stock.");
                     console.log("\nPlease update your quantity based on our inventory or choose a different item.");
+                    askAnotherPurchase();
                 }
-                readProducts();
-                // connection.end();
             });
     });
+}
+
+function askAnotherPurchase() {
+    inquirer
+        .prompt(
+            {
+                name: "anotherPurchase",
+                type: "input",
+                message: "Would you like to make another purchase? (y or n)"
+            })
+        .then(function (answer) {
+            if (answer.anotherPurchase == "y") {
+                readProducts();
+            } else if (answer.anotherPurchase == "n") {
+                console.log("Thank you for your business! Have a nice day!");
+                connection.end();
+            }
+        });
 }
 
 function updateQuant() {
