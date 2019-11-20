@@ -13,10 +13,10 @@ This is a CLI app that uses nodeJS and mySQL to display inventory in a mock stor
 ## screenshots, gifs or videos of the app functioning
 
 Table displayed on CLI:
-![Capturing user variables: command and query](images/tableDisplayedCLI.png)
+![CLI-Table package used to display products](images/tableDisplayedCLI.png)
 
 Example of purchase:
-![Switch function for different commands](assets/images/examplePurchase.png)
+![Total price displayed for purchase](images/examplePurchase.png)
 
 ## Technologies used in this app:
 * javascript
