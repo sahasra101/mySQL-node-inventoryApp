@@ -11,7 +11,7 @@ var connection = mysql.createConnection({
     // Your username
     user: "root",
 
-    password: process.env.mySQLpswd,    
+    password: process.env.mySQLpswd,
     database: "bamazon_db"
 });
 
@@ -83,6 +83,121 @@ function readProducts() {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.log(res);
-        connection.end();
+        buyItem();
+        // connection.end();
     });
+}
+
+function buyItem() {
+    // query the database for all items being auctioned
+    connection.query("SELECT * FROM products", function (err, results) {
+        if (err) throw err;
+        // once you show the list of items, prompt the user for which item they'd like to buy
+        inquirer
+            .prompt([
+                {
+                    name: "buyByID",
+                    type: "input",
+                    message: "What is the ID of the item you would like to buy?"
+                },
+                {
+                    name: "quantity",
+                    type: "input",
+                    message: "How many would you like to buy?"
+                }])
+            .then(function (answer) {
+                // get the information of the item to buy
+                var itemToBuy = "";
+                var itemPrice = 0;
+                var quantItemAvail = 0;
+                var quantDesired = parseInt(answer.quantity);
+                //   match ID to item 
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i].id === parseInt(answer.buyByID)) {
+                        itemToBuy = results[i].product_name;
+                        itemPrice = parseFloat(results[i].price);
+                        quantItemAvail = parseInt(results[i].stock_quantity);
+                        console.log("\nConfirmation: you want to buy " + itemToBuy + ". We have " + quantItemAvail + " in stock.")
+                    }
+                }
+                // if (itemToBuy === "") {
+                //     console.log("We are sorry, you have selected an invalid item! Please try again!")
+                // }
+                var newQuant = 0;
+                var totalPrice = parseFloat(itemPrice)*parseInt(quantDesired);
+                if (quantItemAvail >= quantDesired){
+                    console.log("We have enough of your desired product in stock.");
+                    console.log("\nThe price for each item is $"+itemPrice+".")
+                    console.log("\nThe total price for your purchase is: $" +totalPrice);
+                    newQuant = quantItemAvail - quantDesired; 
+                    connection.query(
+                        "UPDATE products SET ? WHERE ?",
+                        [
+                            {
+                                stock_quantity: newQuant
+                            },
+                            {
+                                product_name: itemToBuy
+                            }
+                        ], function (err, res) {
+                        if (err) throw err;
+                    });
+                } else if (quantItemAvail < quantDesired) {
+                    console.log("We are sorry. We do not have enough of your desired product in stock.");
+                    console.log("\nPlease update your quantity based on our inventory or choose a different item.");
+                }
+                readProducts();
+                // connection.end();
+            });
+    });
+}
+
+function updateQuant() {
+    console.log("Updating products...\n");
+    var query = connection.query(
+        "UPDATE products SET ? WHERE ?",
+        [
+            {
+                stock_quantity: 50
+            },
+            {
+                product_name: ""
+            }
+        ],
+        function (err, res) {
+            if (err) throw err;
+            console.log(res.affectedRows + " stock_quantity updated!\n");
+            // Call deleteProduct AFTER the UPDATE completes
+            //   deleteSong();
+        });
+
+    // logs the actual query being run
+    console.log(query.sql);
+}
+
+
+// function which prompts the user for what action they should take
+function startbidding() {
+    inquirer
+        .prompt[{
+            name: "buyByID",
+            type: "input",
+            message: "What is the ID of the item you would like to buy?"
+        },
+        {
+            name: "quantity",
+            type: "input",
+            message: "How many would you like to buy?"
+        }]
+        .then(function (answer) {
+            // based on their answer, either call the bid or the post functions
+            if (answer.bidByID === "POST") {
+                postAuction();
+            }
+            else if (answer.postOrBid === "BID") {
+                bidAuction();
+            } else {
+                connection.end();
+            }
+        });
 }
