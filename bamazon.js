@@ -1,6 +1,7 @@
 require('dotenv').config();
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var Table = require('cli-table3');
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -82,10 +83,23 @@ function readProducts() {
     connection.query("SELECT * FROM products", function (err, res) {
         if (err) throw err;
         // Log all results of the SELECT statement
-        console.log(res);
-        buyItem();
+        // console.log(res);
+
         // connection.end();
+        
+        var table = new Table({
+            head: ['ID', 'Product Name', 'Department Name', 'Price $', 'Inventory'], 
+            colWidths: [5, 30, 20, 10, 11]
+        });
+        
+        // table is an Array, so you can `push`, `unshift`, `splice` and friends
+        for (var j = 0; j < res.length; j++) {
+            table.push([res[j].id, res[j].product_name, res[j].department_name, res[j].price, res[j].stock_quantity]);
+        }
+        console.log(table.toString());
     });
+    buyItem();
+
 }
 
 function buyItem() {
@@ -124,12 +138,12 @@ function buyItem() {
                 //     console.log("We are sorry, you have selected an invalid item! Please try again!")
                 // }
                 var newQuant = 0;
-                var totalPrice = parseFloat(itemPrice)*parseInt(quantDesired);
-                if (quantItemAvail >= quantDesired){
+                var totalPrice = parseFloat(itemPrice) * parseInt(quantDesired);
+                if (quantItemAvail >= quantDesired) {
                     console.log("We have enough of your desired product in stock.");
-                    console.log("\nThe price for each item is $"+itemPrice+".")
-                    console.log("\nThe total price for your purchase is: $" +totalPrice);
-                    newQuant = quantItemAvail - quantDesired; 
+                    console.log("\nThe price for each item is $" + itemPrice + ".")
+                    console.log("\nThe total price for your purchase is: $" + totalPrice);
+                    newQuant = quantItemAvail - quantDesired;
                     connection.query(
                         "UPDATE products SET ? WHERE ?",
                         [
@@ -140,8 +154,12 @@ function buyItem() {
                                 product_name: itemToBuy
                             }
                         ], function (err, res) {
-                        if (err) throw err;
-                    });
+                            if (err) throw err;
+                        });
+
+// prompt user to see if they want to make a new purchase or leave the store
+
+
                 } else if (quantItemAvail < quantDesired) {
                     console.log("We are sorry. We do not have enough of your desired product in stock.");
                     console.log("\nPlease update your quantity based on our inventory or choose a different item.");
